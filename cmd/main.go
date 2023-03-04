@@ -17,7 +17,7 @@ import (
 //	@BasePath		/
 func main() {
 	// config log
-	lgConfig := bootstrap.NewConfig("conf/config.yaml")
+	bootstrap.NewConfig("conf/config.yaml")
 	lgLogger := bootstrap.NewLogger()
 
 	// plugins DB Redis Minio
@@ -25,15 +25,13 @@ func main() {
 	defer plugins.ClosePlugins()
 
 	// middleware
-	corsM := middleware.NewCors()
-	traceL := middleware.NewTrace(lgLogger)
-	requestL := middleware.NewRequestLog(lgLogger)
+	middleware.Init()
 
 	// router
-	engine := api.NewRouter(lgConfig, corsM, traceL, requestL)
-	server := app.NewHttpServer(lgConfig, engine)
+	api.InitCoreRouter()
+	server := app.NewHttpServer()
 
 	// app run-app
-	application := app.NewApp(lgConfig, lgLogger.Logger, server)
+	application := app.NewApp(lgLogger.Logger, server)
 	application.RunServer()
 }

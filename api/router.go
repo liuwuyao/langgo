@@ -4,56 +4,62 @@ import (
 	"github.com/gin-gonic/gin"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	v0 "langgo/api/v0"
 	"langgo/app/middleware"
-	"langgo/config"
+	"langgo/bootstrap"
 	"langgo/docs"
 	_ "langgo/docs"
+	"strings"
+	"sync"
 )
 
-// NewRouter .
-func NewRouter(
-	conf *config.Configuration,
-	corsM *middleware.Cors,
-	traceL *middleware.TraceLog,
-	requestL *middleware.RequestLog,
-) *gin.Engine {
-	if conf.App.Env == "prod" {
+type CoreRouter struct {
+	lock            sync.Mutex
+	Engine          *gin.Engine
+	routerGroupList []func(router *gin.Engine)
+}
+
+var coreRouter *CoreRouter
+
+func GetCoreRouter() *CoreRouter {
+	return coreRouter
+}
+
+// 注意循环依赖问题，先init coreRouter，再在业务层使用coreRouter
+func InitCoreRouter() {
+	if coreRouter != nil {
+		return
+	}
+	conf := bootstrap.GlobalConfig()
+	if strings.ToLower(conf.App.Env) == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	router := gin.New()
+	coreRouter = &CoreRouter{
+		Engine:          gin.New(),
+		routerGroupList: []func(router *gin.Engine){},
+	}
 	// 跨域 trace-id 日志
-	router.Use(corsM.Handler(), traceL.Handler(), requestL.Handler())
+	coreRouter.Engine.Use(middleware.GetMiddleWareList()...)
 
 	// 静态资源
-	router.StaticFile("/assets", "../../static/image/back.png")
-
-	// 动态资源 注册 api 分组路由
-	setApiGroupRoutes(router)
+	coreRouter.Engine.StaticFile("/assets", "../../static/image/back.png")
+	// 注册路由组
+	coreRouter.ApplyRouterGroup()
 
 	// swag docs
 	docs.SwaggerInfo.BasePath = "/"
-	router.GET("/swagger/*any", gs.WrapHandler(swaggerFiles.Handler))
-
-	return router
+	coreRouter.Engine.GET("/swagger/*any", gs.WrapHandler(swaggerFiles.Handler))
 }
 
-func setApiGroupRoutes(
-	router *gin.Engine,
-) *gin.RouterGroup {
-	group := router.Group("/api/langgo/v0")
+func (core *CoreRouter) AddRouterGroup(f func(router *gin.Engine)) {
+	defer func() {
+		core.lock.Unlock()
+	}()
+	core.lock.Lock()
+	core.routerGroupList = append(coreRouter.routerGroupList, f)
+}
 
-	// test
-	group.GET("/ping", v0.TestHandler)
-
-	//user
-	{
-		group.POST("/user", v0.CreateUserHandler)
-		group.GET("/user", v0.QueryUserHandler)
-		group.GET("/user/:userid", v0.QueryUserByUUIDHandler)
-		group.GET("/user/name/:username", v0.QueryUserByNameHandler)
-		group.PATCH("/user/:userid", v0.UpdateUserByUUIDHandler)
-		group.DELETE("/user/:userid", v0.DeleteUserByUUIDHandler)
+func (core *CoreRouter) ApplyRouterGroup() {
+	for _, f := range core.routerGroupList {
+		f(core.Engine)
 	}
-	return group
 }

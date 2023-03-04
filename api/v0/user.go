@@ -5,12 +5,33 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"langgo/api"
 	"langgo/app/models"
 	"langgo/app/pkg/common"
 	"langgo/app/pkg/web"
 	"langgo/app/repo"
 	"langgo/bootstrap/plugins"
 )
+
+func init() {
+	api.GetCoreRouter().AddRouterGroup(func(router *gin.Engine) {
+		group := router.Group("/api/langgo/v0")
+
+		// test
+		group.GET("/ping", TestHandler)
+
+		//user
+		{
+			group.POST("/user", CreateUserHandler)
+			group.GET("/user", QueryUserHandler)
+			group.GET("/user/:userid", QueryUserByUUIDHandler)
+			group.GET("/user/name/:username", QueryUserByNameHandler)
+			group.PATCH("/user/:userid", UpdateUserByUUIDHandler)
+			group.DELETE("/user/:userid", DeleteUserByUUIDHandler)
+		}
+	})
+
+}
 
 // CreateUserHandler    创建用户
 //	@Summary		创建用户接口

@@ -11,3 +11,24 @@ type Configuration struct {
 	Minio    *plugins.Minio      `mapstructure:"minio" json:"minio" yaml:"minio"`
 	ES       *plugins.ES         `mapstructure:"es" json:"es" yaml:"es"`
 }
+
+func (conf *Configuration) IsEsEnable() bool {
+	if conf.ES != nil && conf.ES.Enable {
+		return true
+	}
+	return false
+}
+
+func (conf *Configuration) IsRedisEnable() bool {
+	if conf.Redis != nil && conf.Redis.Enable {
+		return true
+	}
+	return false
+}
+
+func (conf *Configuration) IsMinioEnable() bool {
+	if conf.Minio != nil && conf.Minio.Enable {
+		return true
+	}
+	return false
+}

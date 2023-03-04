@@ -48,17 +48,20 @@ database:
     log_filename: sql.log # 日志文件名称
 
 redis:
+  enable: false
   host: 127.0.0.1
   port: 6379
   db: 0
   password: 123456
 
 minio:
+  enable: false
   endpoint: 127.0.0.1:9000
   access_key_id: minioadmin
   secret_access_key: minioadmin
   use_ssl: false
 
 es:
+  enable: false
   url: 127.0.0.1:9000
   index: 0

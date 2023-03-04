@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	configPath   string
-	rootPath     = utils.RootPath()
-	lgConfig     = new(LangGoConfig)
-	confFilePath = ""
+	configPath          string
+	rootPath            = utils.RootPath()
+	lgConfig            = new(LangGoConfig)
+	defaultConfFilePath = ""
 )
 
 // LangGoConfig 自定义Log
@@ -33,18 +33,23 @@ func newLangGoConfig() *LangGoConfig {
 	}
 }
 
+func GlobalConfig() *config.Configuration {
+	// main 函数已经调用过NewConfig方法
+	return lgConfig.Conf
+}
+
 // NewConfig 初始化配置对象
-func NewConfig(confFile string) *config.Configuration {
+func NewConfig(confFile string) {
 	if lgConfig.Conf != nil {
-		return lgConfig.Conf
+		return
 	} else {
 		lgConfig = newLangGoConfig()
 		if confFile == "" {
-			lgConfig.initLangGoConfig(confFilePath)
+			lgConfig.initLangGoConfig(defaultConfFilePath)
 		} else {
 			lgConfig.initLangGoConfig(confFile)
 		}
-		return lgConfig.Conf
+		return
 	}
 }
 

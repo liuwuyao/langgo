@@ -42,7 +42,7 @@ func (lg *LangGoMinio) Name() string {
 // New .
 func (lg *LangGoMinio) New() interface{} {
 	lgMinio = newLangGoMinio()
-	lgMinio.initMinio(bootstrap.NewConfig(""))
+	lgMinio.initMinio(bootstrap.GlobalConfig())
 	return lg.MinioClient
 }
 
@@ -65,6 +65,9 @@ func init() {
 
 func (lg *LangGoMinio) initMinio(conf *config.Configuration) {
 	lg.Once.Do(func() {
+		if !conf.IsMinioEnable() {
+			return
+		}
 		endpoint := conf.Minio.EndPoint
 		accessKeyID := conf.Minio.AccessKeyID
 		secretAccessKey := conf.Minio.SecretAccessKey

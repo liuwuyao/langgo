@@ -2,8 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"langgo/api"
+	"langgo/bootstrap"
 	"langgo/config"
 	"log"
 	"net/http"
@@ -21,24 +22,20 @@ type App struct {
 }
 
 // NewHttpServer 创建http app engine
-func NewHttpServer(
-	conf *config.Configuration,
-	router *gin.Engine,
-) *http.Server {
+func NewHttpServer() *http.Server {
 	return &http.Server{
-		Addr:    ":" + conf.App.Port,
-		Handler: router,
+		Addr:    ":" + bootstrap.GlobalConfig().App.Port,
+		Handler: api.GetCoreRouter().Engine,
 	}
 }
 
 // NewApp 创建新应用
 func NewApp(
-	conf *config.Configuration,
 	logger *zap.Logger,
 	httpSrv *http.Server,
 ) *App {
 	return &App{
-		conf:    conf,
+		conf:    bootstrap.GlobalConfig(),
 		logger:  logger,
 		httpSrv: httpSrv,
 	}

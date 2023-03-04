@@ -42,7 +42,7 @@ func (lg *LangGoRedis) Name() string {
 // New .
 func (lg *LangGoRedis) New() interface{} {
 	lgRedis = newLangGoRedis()
-	lgRedis.initRedis(bootstrap.NewConfig(""))
+	lgRedis.initRedis(bootstrap.GlobalConfig())
 	return lgRedis.RedisClient
 }
 
@@ -72,6 +72,9 @@ func init() {
 
 func (lg *LangGoRedis) initRedis(conf *config.Configuration) {
 	lg.Once.Do(func() {
+		if !conf.IsRedisEnable() {
+			return
+		}
 		client := redis.NewClient(&redis.Options{
 			Addr:     conf.Redis.Host + ":" + conf.Redis.Port,
 			Password: conf.Redis.Password, // no password set

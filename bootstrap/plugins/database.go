@@ -58,7 +58,7 @@ func (lg *LangGoDB) Name() string {
 
 // New 初始化DB
 func (lg *LangGoDB) New() interface{} {
-	conf := bootstrap.NewConfig("")
+	conf := bootstrap.GlobalConfig()
 	for _, db := range conf.Database {
 		lgDB[db.DBName] = newLangGoDB()
 		lgDB[db.DBName].initializeDB(db, conf)

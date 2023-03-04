@@ -43,7 +43,7 @@ func (lg *LangGoES) Name() string {
 // New .
 func (lg *LangGoES) New() interface{} {
 	lgES = newLangGoES()
-	lgES.initES(bootstrap.NewConfig(""))
+	lgES.initES(bootstrap.GlobalConfig())
 	return lg.ESClient
 }
 
@@ -60,6 +60,9 @@ func init() {
 
 func (lg *LangGoES) initES(conf *config.Configuration) {
 	lg.Once.Do(func() {
+		if !conf.IsEsEnable() {
+			return
+		}
 		var err error
 		if !common.IsAnyBlank(conf.ES.Url, conf.ES.Index) {
 			lgES.Index = conf.ES.Index
